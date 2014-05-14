@@ -1,0 +1,6 @@
+Processing records...
+Invalid ISBN:	9781561310608	Tennyson : an illustrated life / Norman Page.	u100020
+Duplicate ISBN:	0763714224	u100015	u100016
+Duplicate ISBN:	9780851158068	u100009	u100015
+Processed 13 records.
+Skipped 0 ISBNs identified in file skip_isbns.txt

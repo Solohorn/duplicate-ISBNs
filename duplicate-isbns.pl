@@ -54,6 +54,7 @@ my $uid;
 my $isbn_problem_flagged;
 my $isbn_problem_ctr = 0;
 my $title;
+my $matchField = '001';
 my $VERSION = 0.1;
 
 # Prints usage message then exits.
@@ -108,7 +109,8 @@ sub init
 	}
 	if ($opt{'s'})
 	{
-		open(ISBN_IGNORE , $opt{'s'}) or die $!;
+		my $skipFile = $opt{'s'};
+		open(ISBN_IGNORE, "<$skipFile") or die "Couldn't find the skip file '$skipFile'. $!\n";
 		while (<ISBN_IGNORE>) {
 			my $curLine = $_;
 			chomp($curLine);
@@ -116,10 +118,14 @@ sub init
 		}
 		close ISBN_IGNORE;
 	}
+	if ($opt{'f'})
+	{
+		$matchField = $opt{'f'};
+	}
 }
 
 
-
+init();
 my $outfile = $filename;
 $outfile =~ s/\.mrc$//;
 my $log = $outfile . "_problems.txt";
@@ -134,14 +140,21 @@ while (my $record = $batch->next()) {
 	
 	$ctr++;
 	$title = $record->title();
-	
-	if ($opt{'f'})
+	if ($matchField eq '001')
 	{
-		$uid = $record->field($opt{'f'});
+		eval{$uid = $record->field('001')->{'_data'}};
+		if ($@) 
+		{
+			die "**Error: record $ctr, doesn't contain field $matchField: '$title'\n";
+		}
 	}
 	else
 	{
-		$uid = $record->field('001')->{'_data'};
+		eval{$uid = $record->field($matchField)->subfield('a')};
+		if ($@) 
+		{
+			die "**Error: record $ctr, doesn't contain field $matchField: '$title'\n";
+		}
 	}
 	$uid =~ s/\s+$//;
 	$titles{$uid} = $title;
