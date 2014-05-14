@@ -165,6 +165,11 @@ while (my $record = $batch->next()) {
 	if (@fields) {
 		## examine each 020 field and print it out.
 		foreach my $field (@fields) {
+			eval{$isbn = $field->subfield('a')};
+			if ($@)
+			{
+				next; # Go get the next one no sub field 'a'
+			}
 			$isbn = (defined($field->subfield('a'))) ? $field->subfield('a') : $field->subfield('z');
 			$isbn =~ s/\s.*$//; # strip anything after the number ends
 			if ($skip_isbn{$isbn}) {
