@@ -180,8 +180,16 @@ foreach $isbn (keys %isbn_uids) {
 		print LOG "Duplicate ISBN:\t$isbn";
 		print "$isbn";
 		foreach $uid (@temp_uids) {
-			print LOG "\t$titles{$uid}\t$uid";
-			print "\|$titles{$uid}\|$uid";
+			if ($opt{'t'})
+			{
+				print LOG "\t$titles{$uid}\t$uid";
+				print "\|$titles{$uid}\|$uid";
+			}
+			else
+			{
+				print LOG "\t$uid";
+				print "\|$uid";
+			}
 		} 
 		print LOG "\n";
 		print "\n";
