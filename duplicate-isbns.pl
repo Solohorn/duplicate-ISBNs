@@ -170,7 +170,6 @@ while (my $record = $batch->next()) {
 			{
 				next; # Go get the next one no sub field 'a'
 			}
-			$isbn = (defined($field->subfield('a'))) ? $field->subfield('a') : $field->subfield('z');
 			$isbn =~ s/\s.*$//; # strip anything after the number ends
 			if ($skip_isbn{$isbn}) {
 				print LOG "Skipping ISBN $isbn\n";
