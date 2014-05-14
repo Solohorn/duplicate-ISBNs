@@ -35,7 +35,6 @@ use Business::ISBN;
 # Edit to reflect the appropriate values for the load #
 #######################################################
 my $filename = 'modified-samp.mrc';
-my $isbn_skip_file = 'skip_isbns.txt';
 
 ############
 # End edit #
@@ -72,12 +71,12 @@ or
 
 usage: $0 [-tx] [-f MARC match field] [-i input file]
 
- -a : Output all ISBNs (both unique and duplicate).
+ -a                    : Output all ISBNs (both unique and duplicate).
  -f [MARC match field] : This field uniquely identifies the title (default 001).
  -i [MARC file]        : The MARC file to be processed (required).
  -s [skip file]        : Skip the ISBNs listed in [skip file] (one per line).
- -t : Include titles on output.
- -x : This (help) message.
+ -t                    : Include titles on output.
+ -x                    : This (help) message.
 
 example:
  $0 -i"file.mrc"
@@ -109,17 +108,17 @@ sub init
 	}
 	if ($opt{'s'})
 	{
-		$isbn_skip_file = $opt{'s'};
+		open(ISBN_IGNORE , $opt{'s'}) or die $!;
+		while (<ISBN_IGNORE>) {
+			my $curLine = $_;
+			chomp($curLine);
+			$skip_isbn{$curLine} = 1;
+		}
+		close ISBN_IGNORE;
 	}
 }
 
-open(ISBN_IGNORE , $isbn_skip_file) or die $!;
-while (<ISBN_IGNORE>) {
-	my $curLine = $_;
-	chomp($curLine);
-	$skip_isbn{$curLine} = 1;
-}
-close ISBN_IGNORE;
+
 
 my $outfile = $filename;
 $outfile =~ s/\.mrc$//;
@@ -136,12 +135,15 @@ while (my $record = $batch->next()) {
 	$ctr++;
 	$title = $record->title();
 	
-#	my $t001 = $record->field('001');
-#	my $uid = $t001->{'_data'};
-
-	$uid = $record->field('900')->subfield('a');
+	if ($opt{'f'})
+	{
+		$uid = $record->field($opt{'f'});
+	}
+	else
+	{
+		$uid = $record->field('001')->{'_data'};
+	}
 	$uid =~ s/\s+$//;
-	
 	$titles{$uid} = $title;
 	
 	## get all the 020 fields (list context).
@@ -159,12 +161,7 @@ while (my $record = $batch->next()) {
 			insert_pointer($isbn,$uid);
 			$isbn_object = Business::ISBN->new($isbn);
 			if (defined($isbn_object)) {
-				if ($isbn_object->is_valid) {
-#						my $isbn10 = $isbn_object->as_isbn10;
-#						$problems += insert_pointer($isbn10->as_string, $uid);
-#						my $isbn13 = $isbn_object->as_isbn13;
-#						$problems += insert_pointer($isbn13->as_string, $uid);
-				} else {
+				if (! $isbn_object->is_valid) {
 					print LOG "Invalid ISBN:\t$isbn\t$title\t$uid\n";
 				}
 			}
@@ -178,7 +175,8 @@ while (my $record = $batch->next()) {
 
 foreach $isbn (keys %isbn_uids) {
 	my @temp_uids = @{$isbn_uids{$isbn}};
-	if (scalar(@temp_uids) > 1 ) {
+	if ($opt{'a'} or scalar(@temp_uids) > 1) 
+	{
 		print LOG "Duplicate ISBN:\t$isbn";
 		print "$isbn";
 		foreach $uid (@temp_uids) {
@@ -193,7 +191,7 @@ foreach $isbn (keys %isbn_uids) {
 print LOG "Processed $ctr records.\n";
 $ctr = 0;
 
-print LOG "Skipped $skip_ctr ISBNs identified in file $isbn_skip_file.\n";
+print LOG "Skipped $skip_ctr ISBNs identified in file ".$opt{'s'}."\n" if ($opt{'s'});
 
 sub insert_pointer {
 	my ($isbn,$uid) = @_;
