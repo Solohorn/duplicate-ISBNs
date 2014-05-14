@@ -33,4 +33,3 @@ TO DO:
 Option to check ISBNs in 776$z.
 Provide options to check for duplicate ISSN, Pub. No., etc.
 Option to ignore numbers in 020$z
-Does not flag duplicate ISBNs within a record[?]
