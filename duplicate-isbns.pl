@@ -1,10 +1,35 @@
-# duplicate-isbns.pl
+#!/usr/bin/perl -w
+########################################################################
+# File:     duplicate-isbns.pl
+# Purpose:  Check for duplicate ISBNs
+# Method: 
+# Copyright (C) 2014 Geoff Sinclair, Andrew Nisbet
 #
-# Check for duplicate ISBNs
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+# MA 02110-1301, USA.
+#
+# Author: Geoff Sinclair, Andrew Nisbet
+# Date:   May 14, 2014
+# Rev:    0.1 - developed at Day of Coding COSUGI Conference, Detroit MI.
+########################################################################
 
+use strict;
+use vars qw/ %opt /;
+use Getopt::Std;
 use MARC::Batch;
 use Business::ISBN;
-use strict;
 
 #######################################################
 # Edit to reflect the appropriate values for the load #
@@ -30,9 +55,63 @@ my $uid;
 my $isbn_problem_flagged;
 my $isbn_problem_ctr = 0;
 my $title;
+my $VERSION = 0.1;
 
+# Prints usage message then exits.
+# param:
+# return:
+sub usage
+{
+    print STDERR << "EOF";
+
+Check for duplicate ISBNs. Outputs to stdout in the following format
+ ISBN|cat_key1|cat_key2|...|cat_keyN|
+or 
+ 9780873521352|u17768|u13239|
+ 9780873521352|u17768-Victorian novels in serial|u13239-Explanation-based neural network learning|
+
+usage: $0 [-tx] [-f MARC match field] [-i input file]
+
+ -a : Output all ISBNs (both unique and duplicate).
+ -f [MARC match field] : This field uniquely identifies the title (default 001).
+ -i [MARC file]        : The MARC file to be processed (required).
+ -s [skip file]        : Skip the ISBNs listed in [skip file] (one per line).
+ -t : Include titles on output.
+ -x : This (help) message.
+
+example:
+ $0 -i"file.mrc"
+ $0 -f"900" -i"file.mrc" -s"already_checked.txt" -t -a
+
+ Version: $VERSION
+EOF
+    exit;
+}
 # Flush output
 $| = 1;
+
+# Kicks off the setting of various switches.
+# param:
+# return:
+sub init
+{
+    my $opt_string = 'af:i:s:tx';
+    getopts( "$opt_string", \%opt ) or usage();
+    usage() if ($opt{'x'});
+	if ($opt{'i'})
+	{
+		$filename = $opt{'i'};
+	}
+	else
+	{
+		print STDERR "**Error: please specify the MARC input file.\n";
+		usage();
+	}
+	if ($opt{'s'})
+	{
+		$isbn_skip_file = $opt{'s'};
+	}
+}
 
 open(ISBN_IGNORE , $isbn_skip_file) or die $!;
 while (<ISBN_IGNORE>) {
