@@ -23,7 +23,8 @@ Issues with “duplicate” ISBNs:
 
 Features:
 The script flags invalid ISBNs.
-The script lists duplicate ISBNs.
+The script lists ISBNs that appear in more than one record.
+Flags duplicate ISBNs within a single record.
 
 Options:
 The unique key is assumed to be in 9xx$a or 001. The 001 is the default.
